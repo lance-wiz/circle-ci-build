@@ -2,30 +2,44 @@
 # See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/jobs-steps/#jobs-overview & https://circleci.com/docs/configuration-reference/#jobs
 jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/executor-intro/ & https://circleci.com/docs/configuration-reference/#executor-job
+  wizcli_scan:
+    working_directory: ~/app
     docker:
-      # Specify the version you desire here
-      # See: https://circleci.com/developer/images/image/cimg/base
-      - image: cimg/base:current
-
-    # Add steps to the job
-    # See: https://circleci.com/docs/jobs-steps/#steps-overview & https://circleci.com/docs/configuration-reference/#steps
+      - image: cimg/node:17.2.0
+    parameters:
+      image:
+        type: string
+        # this example will use a pre-built image, with nginx set as the deafult.
+        # the example can be modified to run post a build step, instead of pulling
+        default: "nginx:latest"
+      policy:
+        type: string
+        # Wiz CI policy name to be used.
+        default: "Default vulnerabilities policy"
     steps:
-      # Checkout the code as the first step.
+      - setup_remote_docker
+      # Running the built-in checkout script to checkout the code in this repo
       - checkout
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Download wizcli
+          command: |
+            sudo mkdir -p /wizcli
+            sudo curl -o wizcli https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64
+            sudo chmod +x ./wizcli
+      - run:
+          name: Authenticate to Wiz
+          command: ./wizcli auth --id ${WIZCLI_ID} --secret ${WIZCLI_SECRET}
+      # docker pull is attemped, but the example can be converted to trigger right after a build step instead
+      - run:
+          name: Scan Docker image
+          command: |
+            docker pull \<Constant id=" parameters.image " />
+            ./wizcli docker scan --image \<Constant id=" parameters.image " /> --policy "\<Constant id=" parameters.policy " />"
 
-# Orchestrate jobs using workflows
-# See: https://circleci.com/docs/workflows/ & https://circleci.com/docs/configuration-reference/#workflows
+# In your workflow, make sure to trigger the wizcli_scan job you just declared above (it can trigger after a docker_build job):
 workflows:
-  say-hello-workflow: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  version: 2
+  build_workflow:
     jobs:
-      - say-hello
+      - wizcli_scan
