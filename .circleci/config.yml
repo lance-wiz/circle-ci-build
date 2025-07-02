@@ -34,8 +34,8 @@ jobs:
       - run:
           name: Scan Docker image
           command: |
-            docker pull \<Constant id=" parameters.image " />
-            ./wizcli docker scan --image \<Constant id=" parameters.image " /> --policy "\<Constant id=" parameters.policy " />"
+            docker pull << parameters.image >>
+            ./wizcli docker scan --image << parameters.image >> --policy "<< parameters.policy >>"
 
 # In your workflow, make sure to trigger the wizcli_scan job you just declared above (it can trigger after a docker_build job):
 workflows:
