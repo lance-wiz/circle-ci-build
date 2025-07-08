@@ -12,6 +12,9 @@ jobs:
       policy:
         type: string
         default: "[wlance] Default vulnerabilities policy"
+      iacpolicy:
+        type: string
+        default: "[wlance] Default IaC policy"
     steps:
       - setup_remote_docker
       - checkout
@@ -75,7 +78,7 @@ jobs:
           command: |
             YAML_FILES=$(find . -name "*.yaml" -o -name "*.yml" | wc -l)
             if [ "$YAML_FILES" -gt 0 ]; then
-              ./wizcli iac scan --path . --policy "<< parameters.policy >>"
+              ./wizcli iac scan --path . --policy "<< parameters.iacpolicy >>"
             else
               echo "No Kubernetes YAML files found"
             fi
