@@ -1,0 +1,33 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "ExampleScanner",
+          "rules": [
+            {
+              "id": "INSECURE_SG",
+              "shortDescription": { "text": "Overly permissive security group" },
+              "fullDescription": { "text": "This SG allows unrestricted ingress on TCP/22." }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "INSECURE_SG",
+          "message": { "text": "Open SSH port from anywhere (0.0.0.0/0)" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "main.tf" },
+                "region": { "startLine": 22 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

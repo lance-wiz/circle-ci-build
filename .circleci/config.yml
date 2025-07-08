@@ -43,13 +43,23 @@ jobs:
           command: ./wizcli auth --id ${WIZCLI_ID} --secret ${WIZCLI_SECRET}
 
       - run:
-          name: Scan Docker image
+          name: Scan public Docker image
           command: |
             docker pull << parameters.image >>
             ./wizcli docker scan --image << parameters.image >> --policy "<< parameters.policy >>"
 
       - run:
-          name: Scan Terraform files
+          name: Build and scan Dockerfile in repo
+          command: |
+            if [ -f Dockerfile ]; then
+              docker build -t local-vulnerable-app .
+              ./wizcli docker scan --image local-vulnerable-app --policy "<< parameters.policy >>"
+            else
+              echo "No Dockerfile found to scan"
+            fi
+
+      - run:
+          name: Scan Terraform plan (IaC)
           command: |
             if [ -f main.tf ]; then
               terraform init
@@ -57,7 +67,36 @@ jobs:
               terraform show -json plan.tfplan > plan.tfplan.json
               ./wizcli iac scan --path plan.tfplan.json
             else
-              echo "No Terraform files found to scan"
+              echo "No Terraform files found"
+            fi
+
+      - run:
+          name: Scan Kubernetes manifests
+          command: |
+            YAML_FILES=$(find . -name "*.yaml" -o -name "*.yml" | wc -l)
+            if [ "$YAML_FILES" -gt 0 ]; then
+              ./wizcli iac scan --path .
+            else
+              echo "No Kubernetes YAML files found"
+            fi
+
+      - run:
+          name: Generate & scan SBOM
+          command: |
+            if [ -f package.json ]; then
+              ./wizcli sbom generate --source . --output sbom.spdx.json
+              ./wizcli sbom scan --sbom sbom.spdx.json
+            else
+              echo "No package.json found for SBOM"
+            fi
+
+      - run:
+          name: Upload SARIF (if present)
+          command: |
+            if [ -f results.sarif ]; then
+              ./wizcli sarif upload --sarif-file results.sarif
+            else
+              echo "No SARIF file found"
             fi
 
 workflows:
