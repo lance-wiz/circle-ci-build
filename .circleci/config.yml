@@ -86,11 +86,11 @@ jobs:
       - run:
           name: Generate & scan SBOM
           command: |
-            if [ -f package.json ]; then
-              ./wizcli sbom generate --source . --output sbom.spdx.json
+            if [ -f packages.json ]; then
+              ./wizcli sbom generate --source packages.json --output sbom.spdx.json
               ./wizcli sbom scan --sbom sbom.spdx.json
             else
-              echo "No package.json found for SBOM"
+              echo "No packages.json found for SBOM"
             fi
 
 workflows:
