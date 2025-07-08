@@ -1,5 +1,3 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
 jobs:
@@ -10,34 +8,40 @@ jobs:
     parameters:
       image:
         type: string
-        # this example will use a pre-built image, with nginx set as the deafult.
-        # the example can be modified to run post a build step, instead of pulling
         default: "nginx:latest"
       policy:
         type: string
-        # Wiz CI policy name to be used.
         default: "Default vulnerabilities policy"
     steps:
       - setup_remote_docker
-      # Running the built-in checkout script to checkout the code in this repo
       - checkout
+
       - run:
           name: Download wizcli
           command: |
             sudo mkdir -p /wizcli
             sudo curl -o wizcli https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64
             sudo chmod +x ./wizcli
+
       - run:
           name: Authenticate to Wiz
           command: ./wizcli auth --id ${WIZCLI_ID} --secret ${WIZCLI_SECRET}
-      # docker pull is attemped, but the example can be converted to trigger right after a build step instead
+
       - run:
           name: Scan Docker image
           command: |
             docker pull << parameters.image >>
             ./wizcli docker scan --image << parameters.image >> --policy "<< parameters.policy >>"
 
-# In your workflow, make sure to trigger the wizcli_scan job you just declared above (it can trigger after a docker_build job):
+      - run:
+          name: Scan Terraform files
+          command: |
+            if [ -f main.tf ]; then
+              ./wizcli iac scan --path . --policy "<< parameters.policy >>"
+            else
+              echo "No Terraform files found to scan"
+            fi
+
 workflows:
   version: 2
   build_workflow:
