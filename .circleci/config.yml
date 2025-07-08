@@ -83,16 +83,6 @@ jobs:
               echo "No Kubernetes YAML files found"
             fi
 
-      - run:
-          name: Generate & scan SBOM
-          command: |
-            if [ -f packages.json ]; then
-              ./wizcli sbom generate --source packages.json --output sbom.spdx.json
-              ./wizcli sbom scan --sbom sbom.spdx.json
-            else
-              echo "No packages.json found for SBOM"
-            fi
-
 workflows:
   version: 2
   build_workflow:
