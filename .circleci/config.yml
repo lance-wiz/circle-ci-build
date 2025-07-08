@@ -37,7 +37,8 @@ jobs:
           name: Scan Terraform files
           command: |
             if [ -f main.tf ]; then
-              ./wizcli iac scan --path . --policy "<< parameters.policy >>"
+              terraform plan -out plan.tfplan && terraform show -json plan.tfplan | jq -er . > plan.tfplanjson
+              ./wizcli iac scan --path plan.tfplanjson
             else
               echo "No Terraform files found to scan"
             fi
