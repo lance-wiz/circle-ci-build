@@ -11,7 +11,7 @@ jobs:
         default: "nginx:latest"
       policy:
         type: string
-        default: "Default vulnerabilities policy"
+        default: "[wlance] Default vulnerabilities policy"
     steps:
       - setup_remote_docker
       - checkout
